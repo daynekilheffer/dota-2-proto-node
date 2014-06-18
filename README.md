@@ -10,3 +10,22 @@ Still attempting to simply parse the replay.
   * consider writing the reader as a modular system.  If you are okay with file io, use reader1, if you have enough memory, use reader2
   * parser should only parse if there is a listener for that command type or if the parser needs to know information inside the message.
 
+### thoughts
+
+Possible API:
+    var DemoParser = require('demo.parser'),
+        DotaParser = require('dota.parser');
+
+    var demoParser = new DemoParser(),
+        dotaParser = new DotaParser();
+
+    var players = [];
+
+    dotaParser.on('player:added', function (details) {
+        players.add(details);
+    });
+
+    demoParser.use(dotaParser);
+
+    demoParser.parse();
+
