@@ -1,0 +1,169 @@
+#define HANDLE_UserMsg( _x )			case UM_ ## _x: PrintUserMessage< CUserMsg_ ## _x, UM_ ## _x >( *this, parseBufferUM, SizeUM ); break
+#define HANDLE_DOTA_UserMsg( _x )		case DOTA_UM_ ## _x: PrintUserMessage< CDOTAUserMsg_ ## _x, DOTA_UM_ ## _x >( *this, parseBufferUM, SizeUM ); break
+
+		default:
+			printf( "WARNING. DumpUserMessage(): Unknown user message %d.\n", Cmd );
+			break;
+
+		HANDLE_UserMsg( AchievementEvent );            	// 1,
+		HANDLE_UserMsg( CloseCaption );                 // 2,
+		//$ HANDLE_UserMsg( CloseCaptionDirect );       // 3,
+		HANDLE_UserMsg( CurrentTimescale );             // 4,
+		HANDLE_UserMsg( DesiredTimescale );             // 5,
+		HANDLE_UserMsg( Fade );                         // 6,
+		HANDLE_UserMsg( GameTitle );                    // 7,
+		HANDLE_UserMsg( Geiger );                       // 8,
+		HANDLE_UserMsg( HintText );                     // 9,
+		HANDLE_UserMsg( HudMsg );                       // 10,
+		HANDLE_UserMsg( HudText );                      // 11,
+		HANDLE_UserMsg( KeyHintText );                  // 12,
+		HANDLE_UserMsg( MessageText );                  // 13,
+		HANDLE_UserMsg( RequestState );                 // 14,
+		HANDLE_UserMsg( ResetHUD );                     // 15,
+		HANDLE_UserMsg( Rumble );                       // 16,
+		HANDLE_UserMsg( SayText );                      // 17,
+		HANDLE_UserMsg( SayText2 );                     // 18,
+		HANDLE_UserMsg( SayTextChannel );               // 19,
+		HANDLE_UserMsg( Shake );                        // 20,
+		HANDLE_UserMsg( ShakeDir );                     // 21,
+		HANDLE_UserMsg( StatsCrawlMsg );                // 22,
+		HANDLE_UserMsg( StatsSkipState );               // 23,
+		HANDLE_UserMsg( TextMsg );                      // 24,
+		HANDLE_UserMsg( Tilt );                         // 25,
+		HANDLE_UserMsg( Train );                        // 26,
+		HANDLE_UserMsg( VGUIMenu );                     // 27,
+		HANDLE_UserMsg( VoiceMask );                    // 28,
+		HANDLE_UserMsg( VoiceSubtitle );                // 29,
+		HANDLE_UserMsg( SendAudio );                    // 30,
+
+		//$ HANDLE_DOTA_UserMsg( AddUnitToSelection );  // 64,
+		HANDLE_DOTA_UserMsg( AIDebugLine );             // 65,
+		HANDLE_DOTA_UserMsg( ChatEvent );               // 66,
+		HANDLE_DOTA_UserMsg( CombatHeroPositions );     // 67,
+		HANDLE_DOTA_UserMsg( CombatLogData );           // 68,
+		//$ HANDLE_DOTA_UserMsg( CombatLogName );       // 69,
+		HANDLE_DOTA_UserMsg( CombatLogShowDeath );      // 70,
+		HANDLE_DOTA_UserMsg( CreateLinearProjectile );  // 71,
+		HANDLE_DOTA_UserMsg( DestroyLinearProjectile ); // 72,
+		HANDLE_DOTA_UserMsg( DodgeTrackingProjectiles );// 73,
+		HANDLE_DOTA_UserMsg( GlobalLightColor );        // 74,
+		HANDLE_DOTA_UserMsg( GlobalLightDirection );    // 75,
+		HANDLE_DOTA_UserMsg( InvalidCommand );          // 76,
+		HANDLE_DOTA_UserMsg( LocationPing );            // 77,
+		HANDLE_DOTA_UserMsg( MapLine );                 // 78,
+		HANDLE_DOTA_UserMsg( MiniKillCamInfo );         // 79,
+		HANDLE_DOTA_UserMsg( MinimapDebugPoint );       // 80,
+		HANDLE_DOTA_UserMsg( MinimapEvent );            // 81,
+		HANDLE_DOTA_UserMsg( NevermoreRequiem );        // 82,
+		HANDLE_DOTA_UserMsg( OverheadEvent );           // 83,
+		HANDLE_DOTA_UserMsg( SetNextAutobuyItem );      // 84,
+		HANDLE_DOTA_UserMsg( SharedCooldown );          // 85,
+		HANDLE_DOTA_UserMsg( SpectatorPlayerClick );    // 86,
+		HANDLE_DOTA_UserMsg( TutorialTipInfo );         // 87,
+		HANDLE_DOTA_UserMsg( UnitEvent );               // 88,
+		HANDLE_DOTA_UserMsg( ParticleManager );         // 89,
+		HANDLE_DOTA_UserMsg( BotChat );                 // 90,
+		HANDLE_DOTA_UserMsg( HudError );                // 91,
+		HANDLE_DOTA_UserMsg( ItemPurchased );           // 92,
+		HANDLE_DOTA_UserMsg( Ping );                    // 93
+
+#undef HANDLE_UserMsg
+#undef HANDLE_DOTA_UserMsg
+		}
+	}
+}
+
+template < class T, int msgType >
+void PrintNetMessage( CDemoFileDump& Demo, const void *parseBuffer, int BufferSize )
+{
+	T msg;
+
+	if( msg.ParseFromArray( parseBuffer, BufferSize ) )
+	{
+		if( msgType == svc_GameEventList )
+		{
+			Demo.m_GameEventList.CopyFrom( msg );
+		}
+
+		Demo.MsgPrintf( msg, BufferSize, "%s", msg.DebugString().c_str() );
+	}
+}
+
+template <>
+void PrintNetMessage< CSVCMsg_UserMessage, svc_UserMessage >( CDemoFileDump& Demo, const void *parseBuffer, int BufferSize )
+{
+	Demo.DumpUserMessage( parseBuffer, BufferSize );
+}
+
+template <>
+void PrintNetMessage< CSVCMsg_GameEvent, svc_GameEvent >( CDemoFileDump& Demo, const void *parseBuffer, int BufferSize )
+{
+	CSVCMsg_GameEvent msg;
+
+	if( msg.ParseFromArray( parseBuffer, BufferSize ) )
+	{
+		int iDescriptor;
+
+		for( iDescriptor = 0; iDescriptor < Demo.m_GameEventList.descriptors().size(); iDescriptor++ )
+		{
+			const CSVCMsg_GameEventList::descriptor_t& Descriptor = Demo.m_GameEventList.descriptors( iDescriptor );
+
+			if( Descriptor.eventid() == msg.eventid() )
+				break;
+		}
+
+		if( iDescriptor == Demo.m_GameEventList.descriptors().size() )
+		{
+			printf( "%s", msg.DebugString() );
+		}
+		else
+		{
+			int numKeys = msg.keys().size();
+			const CSVCMsg_GameEventList::descriptor_t& Descriptor = Demo.m_GameEventList.descriptors( iDescriptor );
+
+			printf( "%s eventid:%d %s\n", Descriptor.name().c_str(), msg.eventid(),
+				msg.has_event_name() ? msg.event_name().c_str() : "" );
+
+			for( int i = 0; i < numKeys; i++ )
+			{
+				const CSVCMsg_GameEventList::key_t& Key = Descriptor.keys( i );
+				const CSVCMsg_GameEvent::key_t& KeyValue = msg.keys( i );
+
+				printf(" %s: ", Key.name().c_str() );
+
+				if( KeyValue.has_val_string() )
+					printf( "%s ", KeyValue.val_string().c_str() );
+				if( KeyValue.has_val_float() )
+					printf( "%f ", KeyValue.val_float() );
+				if( KeyValue.has_val_long() )
+					printf( "%d ", KeyValue.val_long() );
+				if( KeyValue.has_val_short() )
+					printf( "%d ", KeyValue.val_short() );
+				if( KeyValue.has_val_byte() )
+					printf( "%d ", KeyValue.val_byte() );
+				if( KeyValue.has_val_bool() )
+					printf( "%d ", KeyValue.val_bool() );
+				if( KeyValue.has_val_uint64() )
+					printf( "%lld ", KeyValue.val_uint64() );
+
+				printf( "\n" );
+			}
+		}
+	}
+}
+
+static std::string GetNetMsgName( int Cmd )
+{
+	if( NET_Messages_IsValid( Cmd ) )
+	{
+		return NET_Messages_Name( ( NET_Messages )Cmd );
+	}
+	else if( SVC_Messages_IsValid( Cmd ) )
+	{
+		return SVC_Messages_Name( ( SVC_Messages )Cmd );
+	}
+
+	assert( 0 );
+	return "NETMSG_???";
+}
+

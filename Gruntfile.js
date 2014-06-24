@@ -12,11 +12,16 @@ module.exports = function (grunt) {
                     stderr: true
                 }
             }
+        },
+        jasmine_node: {
+            specNameMatcher : 'spec'
         }
     });
 
     grunt.loadNpmTasks('grunt-shell');
+    grunt.loadNpmTasks('grunt-jasmine-node');
 
     grunt.registerTask('protos', ['shell:protoc:proto/demo', 'shell:protoc:proto/netmessages']);
     grunt.registerTask('default', ['shell:protoc:proto/demo']);
+    grunt.registerTask('unit', ['jasmine_node']);
 };

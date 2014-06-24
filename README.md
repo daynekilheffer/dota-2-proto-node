@@ -13,19 +13,20 @@ Still attempting to simply parse the replay.
 ### thoughts
 
 Possible API:
-    var DemoParser = require('demo.parser'),
-        DotaParser = require('dota.parser');
+    var parser = require('parser'),
+        DemoParser = parser.DemoParser
+        DotaParser = parser.DotaParser
 
     var demoParser = new DemoParser(),
         dotaParser = new DotaParser();
 
     var players = [];
 
-    dotaParser.on('player:added', function (details) {
+    demoParser.use(dotaParser);
+
+    demoParser.on('dota:player:added', function (details) {
         players.add(details);
     });
-
-    demoParser.use(dotaParser);
 
     demoParser.parse();
 
