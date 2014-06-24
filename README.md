@@ -1,6 +1,7 @@
 # dota 2 replay parser
 
 Do not fork - this is only a test project.
+
 Still attempting to simply parse the replay.
 
 ## TODO:
@@ -15,7 +16,7 @@ Still attempting to simply parse the replay.
 Possible API:
 ```javascript
     var parser = require('parser'),
-        DemoParser = parser.DemoParser
+        DemoParser = parser.DemoParser,
         DotaParser = parser.DotaParser
 
     var demoParser = new DemoParser(),
